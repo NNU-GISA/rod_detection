@@ -1,5 +1,7 @@
 import numpy as np
 import random
+import copy
+from sklearn.ensemble import RandomForestClassifier
 def loadDataSet(filename):
     '''
     Extract the data from dataSet file
@@ -50,3 +52,35 @@ def genTRan(sta, end, t):
         ind.append(random.randint(sta, end)-1)
     return ind
 
+def easyEnsemble(fea_tr, lab_tr, fea_t, lab_t):
+
+    classLabels = np.array([0, 1, 3, 5])
+    fea_tr0, lab_tr0 = fea_tr[(lab_tr == 0)], lab_tr[(lab_tr == 0)]
+    fea_tr1, lab_tr1 = fea_tr[(lab_tr == 1)], lab_tr[(lab_tr == 1)]
+    fea_tr3, lab_tr3 = fea_tr[(lab_tr == 3)], lab_tr[(lab_tr == 3)]
+    fea_tr5, lab_tr5 = fea_tr[(lab_tr == 5)], lab_tr[(lab_tr == 5)]
+
+    t = {0: 0, 1: 0, 3: 0, 5: 0}
+    p = [copy.deepcopy(t) for i in range(len(lab_t))]
+    for i in range(100):
+        ind0 = genTRan(0, fea_tr0.shape[0], fea_tr1.shape[0])
+
+        ind3 = genTRan(0, fea_tr3.shape[0], fea_tr1.shape[0])
+
+        fea_tr = np.vstack((fea_tr0[ind0], fea_tr1, fea_tr3[ind3], fea_tr5))
+        lab_tr = np.vstack((lab_tr0[ind0].reshape(-1, 1), lab_tr1.reshape(-1, 1), \
+                            lab_tr3[ind3].reshape(-1, 1), lab_tr5.reshape(-1, 1)))
+        clf = RandomForestClassifier(n_estimators=500)
+        clf.fit(fea_tr, lab_tr.reshape((len(lab_tr),)))
+        pred = clf.predict(fea_t)
+        for j in range(len(lab_t)):
+            p[j][pred[j]] += 1
+            # print('Under sampling result is:')
+            # rodDetection.classifyResult(classLabels, lab_t, clf.predict(fea_t))
+
+    final_pred = []
+    for j in range(len(lab_t)):
+        temp = sorted(p[j].items(), key=lambda d: d[1], reverse=True)
+        final_pred.append(temp[0][0])
+    final_pred = np.array(final_pred)
+    classifyResult(classLabels, lab_t, final_pred)
