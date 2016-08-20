@@ -207,22 +207,6 @@ def nearMiss(feature,label, fea_t, lab_t, kNN):
             for t in range(n):
                 distance0[i, j] += (feature[i, t]-feature[j ,t])**2
         distance0[i, j] = distance0[i, j]**0.5
-    minValue, maxValue = distance0.min(), distance0.max()
-    span = maxValue - minValue
-    # boxNum = 300
-    # delta = span/boxNum
-
-    # xBox = np.zeros((boxNum,))
-    # for i in range(boxNum):
-    #     l = minValue + i*delta
-    #     h = minValue + (i+1)*delta
-    #     xBox[i] = (~((distance0 >= l) ^ (distance0 <= h))).sum()
-
-    # x = [minValue+i*delta for i in range(boxNum)]
-    # plt.bar(x,xBox)
-    # plt.show()
-
-
     m, n = feature.shape
     SeedInd = [randint(0,m-1)]
     notSeedInd = [i for i in list(range(m)) if i not in SeedInd]
@@ -263,8 +247,6 @@ def nearMiss(feature,label, fea_t, lab_t, kNN):
                    < blockDistance(keepEle, rowList[1:], feature)):
                     keepEle = ele
         chosenSample0.append(keepEle)
-
-    #print('chosenSample = ', chosenSample0)
 
     classLabels = np.array([0, 1, 3, 5])
     fea_tr, lab_tr = feature[chosenSample0], label[chosenSample0]
