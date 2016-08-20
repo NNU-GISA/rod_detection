@@ -1,10 +1,12 @@
 import rodDetection
 from sklearn.ensemble import RandomForestClassifier
-from sklearn import  svm
+from sklearn import svm
 import numpy as np
 from random import *
 import copy
 from time import time
+import matplotlib.pyplot as plt
+
 lab_tr, fea_tr = rodDetection.loadDataSet('train.txt')
 for i in range(len(lab_tr)):
     if lab_tr[i]==10:
@@ -18,21 +20,80 @@ classLabels = np.array([0, 1, 3, 5])
 # rodDetection.easyEnsemble(fea_tr, lab_tr, fea_t ,lab_t)
 # rodDetection.balanceCascade(fea_tr, lab_tr, fea_t, lab_t)
 fea_tr0, lab_tr0 = fea_tr[(lab_tr==0)], lab_tr[(lab_tr==0)]
-m,n = fea_tr0.shape
-distance0 = np.zeros((m, m))
-t0 = time()
-for i in range(m):
-    for j in range(m):
-        for t in range(n):
-            distance0[i, j] += (fea_tr0[i, t]-fea_tr0[j ,t])**2
-    distance0[i, j] = distance0[i, j]**0.5
-print('time cost %f'%(time() - t0))
-minValue, maxValue = min(distance0), max(distance0)
-xBox = np.array((8,1))
-for i in range(8):
-    xBox[i] = (distance0)
 
-distance0List = [list(temp) for temp in distance0]
+rodDetection.nearMiss(fea_tr0, lab_tr0, fea_t, lab_t, kNN=18)
+
+# m,n = fea_tr0.shape
+# distance0 = np.zeros((m, m))
+# t0 = time()
+# for i in range(m):
+#     for j in range(m):
+#         for t in range(n):
+#             distance0[i, j] += (fea_tr0[i, t]-fea_tr0[j ,t])**2
+#     distance0[i, j] = distance0[i, j]**0.5
+# print('time cost %f'%(time() - t0))
+# minValue, maxValue = distance0.min(), distance0.max()
+# span = maxValue - minValue
+# boxNum = 300
+# delta = span/boxNum
+#
+# xBox = np.zeros((boxNum,))
+# for i in range(boxNum):
+#     l = minValue + i*delta
+#     h = minValue + (i+1)*delta
+#     xBox[i] = (~((distance0 >= l) ^ (distance0 <= h))).sum()
+#
+# x = [minValue+i*delta for i in range(boxNum)]
+# plt.bar(x,xBox)
+# # plt.show()
+# distance0List = [list(temp) for temp in distance0]
+#
+# m, n = fea_tr0.shape
+# firstSeedInd = randint(0,m-1)
+# SeedInd = [randint(0,m-1)]
+# notSeedInd = [i for i in list(range(m)) if i not in SeedInd]
+# kNN = 18
+# while(len(SeedInd)<kNN):
+#     #no check
+#     nextSeedInd = notSeedInd[0]
+#     for SI in SeedInd:
+#         for nSI in notSeedInd:
+#             if distance0[SI][nSI] > distance0[SI][nextSeedInd]:
+#                 nextSeedInd = nSI
+#
+#     SeedInd.append(nextSeedInd)
+#     notSeedInd = [i for i in list(range(m)) if i not in SeedInd]
+# print('SeedInd', SeedInd)
+#
+# classDict = dict( [ (i, [SeedInd[i]] ) for i in range(kNN) ] )
+# seekClassDict =dict( [(v[0],k) for k,v in classDict.items()] )
+# for nSI in notSeedInd:
+#     likeObjectInd = SeedInd[0]
+#     for SI in SeedInd:
+#         if distance0[nSI][SI] < distance0[nSI][likeObjectInd]:
+#             likeObjectInd = SI
+#     classDict[seekClassDict[likeObjectInd]].append(nSI)
+# print(classDict)
+#
+# chosenSample0 = []
+#
+# for key in range(kNN):
+#     rowList = classDict[key]
+#     if len(rowList)==1 or len(rowList) == 2:
+#         keepEle = rowList[0]
+#     else:
+#         keepEle = rowList[0]
+#         for ele in rowList:
+#             reservedList = copy.copy(rowList)
+#             reservedList = reservedList.remove(ele)
+#             if(rodDetection.blockDistance(ele, reservedList, fea_tr0) \
+#                < rodDetection.blockDistance(keepEle, rowList[1:], fea_tr0)):
+#                 keepEle = ele
+#     chosenSample0.append(keepEle)
+# print('chosenSample = ', chosenSample0)
+
+
+
 
 
 # clf = RandomForestClassifier(n_estimators=500)

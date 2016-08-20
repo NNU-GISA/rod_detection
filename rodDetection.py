@@ -2,6 +2,7 @@ import numpy as np
 import random
 import copy
 from sklearn.ensemble import RandomForestClassifier
+from random import *
 def loadDataSet(filename):
     '''
     Extract the data from dataSet file
@@ -175,3 +176,100 @@ def balanceCascade(fea_tr, lab_tr, fea_t, lab_t):
         final_pred.append(temp[0][0])
     final_pred = np.array(final_pred)
     classifyResult(classLabels, lab_t, final_pred)
+
+def blockDistance(ele, reservedList, block):
+    '''
+    返回第ele个样本到reservedList中样本的街区距离和
+    :param ele:(int) 目标样本
+    :param reservedList: (list) location样本的位置
+    :param block: features[n_samples, m_variables]
+    :return: 第ele个样本到reservedList中样本的街区距离和
+    '''
+    sumDistance = 0
+    objectSample = block[ele]
+    baseSample = block[reservedList]
+    sumDistance = abs(baseSample-objectSample).sum()
+    return sumDistance
+
+
+def nearMiss(feature,label, fea_t, lab_t, kNN):
+    '''
+    利用KNN试图挑选那些最具代表性的大众样本，叫做NearMiss
+    减弱下采样信息的缺失
+    :param fea_ture: 传入特征[n_samples, n_features]
+    :param kNN: 将样本分为kNN类
+    :return: chosenSample0 (list) 在feature中具有代表性的样本的下标
+    '''
+    m,n = feature.shape
+    distance0 = np.zeros((m, m))
+    for i in range(m):
+        for j in range(m):
+            for t in range(n):
+                distance0[i, j] += (feature[i, t]-feature[j ,t])**2
+        distance0[i, j] = distance0[i, j]**0.5
+    minValue, maxValue = distance0.min(), distance0.max()
+    span = maxValue - minValue
+    # boxNum = 300
+    # delta = span/boxNum
+
+    # xBox = np.zeros((boxNum,))
+    # for i in range(boxNum):
+    #     l = minValue + i*delta
+    #     h = minValue + (i+1)*delta
+    #     xBox[i] = (~((distance0 >= l) ^ (distance0 <= h))).sum()
+
+    # x = [minValue+i*delta for i in range(boxNum)]
+    # plt.bar(x,xBox)
+    # plt.show()
+
+
+    m, n = feature.shape
+    SeedInd = [randint(0,m-1)]
+    notSeedInd = [i for i in list(range(m)) if i not in SeedInd]
+    while(len(SeedInd)<kNN):
+        #no check
+        nextSeedInd = notSeedInd[0]
+        for SI in SeedInd:
+            for nSI in notSeedInd:
+                if distance0[SI][nSI] > distance0[SI][nextSeedInd]:
+                    nextSeedInd = nSI
+
+        SeedInd.append(nextSeedInd)
+        notSeedInd = [i for i in list(range(m)) if i not in SeedInd]
+    # print('SeedInd', SeedInd)
+
+    classDict = dict( [ (i, [SeedInd[i]] ) for i in range(kNN) ] )
+    seekClassDict =dict( [(v[0],k) for k,v in classDict.items()] )
+    for nSI in notSeedInd:
+        likeObjectInd = SeedInd[0]
+        for SI in SeedInd:
+            if distance0[nSI][SI] < distance0[nSI][likeObjectInd]:
+                likeObjectInd = SI
+        classDict[seekClassDict[likeObjectInd]].append(nSI)
+    print(classDict)
+
+    chosenSample0 = []
+
+    for key in range(kNN):
+        rowList = classDict[key]
+        if len(rowList)==1 or len(rowList) == 2:
+            keepEle = rowList[0]
+        else:
+            keepEle = rowList[0]
+            for ele in rowList:
+                reservedList = copy.copy(rowList)
+                reservedList = reservedList.remove(ele)
+                if(blockDistance(ele, reservedList, feature) \
+                   < blockDistance(keepEle, rowList[1:], feature)):
+                    keepEle = ele
+        chosenSample0.append(keepEle)
+
+    #print('chosenSample = ', chosenSample0)
+
+    classLabels = np.array([0, 1, 3, 5])
+    fea_tr, lab_tr = feature[chosenSample0], label[chosenSample0]
+    clf = RandomForestClassifier(n_estimators=500)
+    clf.fit(fea_tr, lab_tr)
+    pred = clf.predict(fea_t)
+    classifyResult(cla=classLabels, pred=pred, label=lab_t)
+
