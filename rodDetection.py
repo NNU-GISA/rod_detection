@@ -2,7 +2,7 @@ import numpy as np
 import random
 import copy
 from sklearn.ensemble import RandomForestClassifier
-from random import *
+
 def loadDataSet(filename):
     '''
     Extract the data from dataSet file
@@ -53,7 +53,7 @@ def genTRan(sta, end, t):
     '''
     ind = []
     for i in range(t):
-        ind.append(random.randint(sta, end)-1)
+        ind.append(random.randint(sta, end) - 1)
     return ind
 
 def easyEnsemble(fea_tr, lab_tr, fea_t, lab_t):
@@ -136,7 +136,7 @@ def balanceCascade(fea_tr, lab_tr, fea_t, lab_t):
         ind3_left = [i for i in range(len(lab_tr3)) if i not in list(set(ind3))]
 
         fea_tr_i = np.vstack((fea_tr0[ind0], fea_tr1, fea_tr3[ind3], fea_tr5))
-        lab_tr_i = np.vstack((lab_tr0[ind0].reshape(-1, 1), lab_tr1.reshape(-1, 1), \
+        lab_tr_i = np.vstack((lab_tr0[ind0].reshape(-1, 1), lab_tr1.reshape(-1, 1),
                               lab_tr3[ind3].reshape(-1, 1), lab_tr5.reshape(-1, 1)))
 
         fea_tr0_t_left = fea_tr0[ind0_left]
@@ -192,7 +192,7 @@ def blockDistance(ele, reservedList, block):
     return sumDistance
 
 
-def nearMiss(feature,label, fea_t, lab_t, kNN):
+def nearMiss(feature, kNN):
     '''
     利用KNN试图挑选那些最具代表性的大众样本，叫做NearMiss
     减弱下采样信息的缺失
@@ -208,7 +208,7 @@ def nearMiss(feature,label, fea_t, lab_t, kNN):
                 distance0[i, j] += (feature[i, t]-feature[j ,t])**2
         distance0[i, j] = distance0[i, j]**0.5
     m, n = feature.shape
-    SeedInd = [randint(0,m-1)]
+    SeedInd = [random.randint(0,m-1)]
     notSeedInd = [i for i in list(range(m)) if i not in SeedInd]
     while(len(SeedInd)<kNN):
         #no check
@@ -243,15 +243,25 @@ def nearMiss(feature,label, fea_t, lab_t, kNN):
             for ele in rowList:
                 reservedList = copy.copy(rowList)
                 reservedList = reservedList.remove(ele)
-                if(blockDistance(ele, reservedList, feature) \
+                if(blockDistance(ele, reservedList, feature)
                    < blockDistance(keepEle, rowList[1:], feature)):
                     keepEle = ele
         chosenSample0.append(keepEle)
+    return chosenSample0
+    # classLabels = np.array([0, 1, 3, 5])
+    # fea_tr, lab_tr = feature[chosenSample0], label[chosenSample0]
+    # clf = RandomForestClassifier(n_estimators=500)
+    # clf.fit(fea_tr, lab_tr)
+    # pred = clf.predict(fea_t)
+    # classifyResult(cla=classLabels, pred=pred, label=lab_t)
 
+def kNNPrototypes(fea_tr, lab_tr, fea_t, lab_t):
+    '''
+    测试经过kNN聚类选择代表点之后的分类表现
+
+    '''
     classLabels = np.array([0, 1, 3, 5])
-    fea_tr, lab_tr = feature[chosenSample0], label[chosenSample0]
     clf = RandomForestClassifier(n_estimators=500)
-    clf.fit(fea_tr, lab_tr)
+    clf.fit(fea_tr, lab_tr.reshape((len(lab_tr, ))))
     pred = clf.predict(fea_t)
-    classifyResult(cla=classLabels, pred=pred, label=lab_t)
-
+    classifyResult(classLabels, lab_t, pred)

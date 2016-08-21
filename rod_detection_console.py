@@ -17,11 +17,24 @@ lab_t, fea_t = rodDetection.loadDataSet('test7_3.txt')
 
 classLabels = np.array([0, 1, 3, 5])
 
-# rodDetection.easyEnsemble(fea_tr, lab_tr, fea_t ,lab_t)
-# rodDetection.balanceCascade(fea_tr, lab_tr, fea_t, lab_t)
+rodDetection.easyEnsemble(fea_tr, lab_tr, fea_t ,lab_t)
+rodDetection.balanceCascade(fea_tr, lab_tr, fea_t, lab_t)
 fea_tr0, lab_tr0 = fea_tr[(lab_tr==0)], lab_tr[(lab_tr==0)]
+fea_tr1, lab_tr1 = fea_tr[(lab_tr==1)], lab_tr[(lab_tr==1)]
+fea_tr3, lab_tr3 = fea_tr[(lab_tr==3)], lab_tr[(lab_tr==3)]
+fea_tr5, lab_tr5 = fea_tr[(lab_tr==5)], lab_tr[(lab_tr==5)]
 
-rodDetection.nearMiss(fea_tr0, lab_tr0, fea_t, lab_t, kNN=18)
+tr0_kNN_ind = rodDetection.nearMiss(fea_tr0, 18)
+tr3_kNN_ind = rodDetection.nearMiss(fea_tr3, 18)
+new_kNN_fea_tr = np.vstack((fea_tr0[tr0_kNN_ind],
+                            fea_tr1,
+                            fea_tr3[tr3_kNN_ind],
+                            fea_tr5))
+new_kNN_lab_tr = np.vstack((lab_tr0[tr0_kNN_ind].reshape(-1, 1),
+                            lab_tr1.reshape(-1, 1),
+                            lab_tr3[tr3_kNN_ind].reshape(-1, 1),
+                            lab_tr5.reshape(-1, 1)))
+rodDetection.kNNPrototypes(new_kNN_fea_tr, new_kNN_lab_tr, fea_t, lab_t)
 
 # m,n = fea_tr0.shape
 # distance0 = np.zeros((m, m))
